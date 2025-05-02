@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "file_metadata")
+@Table(name = "file_metadata", indexes = @Index(name = "key_idx", columnList = "key"))
 public class FileMetadata {
 
     @Id
@@ -23,15 +23,15 @@ public class FileMetadata {
     @Column(length = 2048)
     private String description;
     @Column(length = 512)
-    private String s3Key;
+    private String key;
     @Column(columnDefinition = "TEXT") // very high character limit for lengthy URLs
     private String url;
     private LocalDateTime uploadedAt;
 
-    public FileMetadata(String name, String description, String s3Key, String url, LocalDateTime uploadedAt) {
+    public FileMetadata(String name, String description, String key, String url, LocalDateTime uploadedAt) {
         this.name = name;
         this.description = description;
-        this.s3Key = s3Key;
+        this.key = key;
         this.url = url;
         this.uploadedAt = uploadedAt;
     }
