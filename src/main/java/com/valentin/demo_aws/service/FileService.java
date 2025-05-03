@@ -32,11 +32,12 @@ public class FileService {
         return fileMetadataRepository.findByKey(key);
     }
 
-    public FileMetadata uploadFile(MultipartFile file, String name, String description) throws IOException {
+    public FileMetadata uploadFile(MultipartFile file, String name, String description, String uploaderEmail)
+            throws IOException {
         String key = s3Service.uploadFile(file);
         String url = s3Service.generateFileUrl(key);
 
-        FileMetadata fileMetadata = new FileMetadata(name, description, key, url, LocalDateTime.now());
+        FileMetadata fileMetadata = new FileMetadata(name, description, uploaderEmail, key, url, LocalDateTime.now());
         return fileMetadataRepository.save(fileMetadata);
     }
 

@@ -22,15 +22,19 @@ public class FileMetadata {
     private String name;
     @Column(length = 2048)
     private String description;
+    @Column(nullable = false, length = 256)
+    private String uploaderEmail;
     @Column(length = 512)
     private String key;
     @Column(columnDefinition = "TEXT") // very high character limit for lengthy URLs
     private String url;
     private LocalDateTime uploadedAt;
 
-    public FileMetadata(String name, String description, String key, String url, LocalDateTime uploadedAt) {
+    public FileMetadata(String name, String description, String uploaderEmail,
+                        String key, String url, LocalDateTime uploadedAt) {
         this.name = name;
         this.description = description;
+        this.uploaderEmail = uploaderEmail;
         this.key = key;
         this.url = url;
         this.uploadedAt = uploadedAt;
