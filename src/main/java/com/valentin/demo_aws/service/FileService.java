@@ -2,7 +2,6 @@ package com.valentin.demo_aws.service;
 
 import com.valentin.demo_aws.model.FileMetadata;
 import com.valentin.demo_aws.repository.FileMetadataRepository;
-import com.valentin.demo_aws.repository.FileMetadataKeyProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class FileService {
@@ -21,11 +19,8 @@ public class FileService {
     @Autowired
     private FileMetadataRepository fileMetadataRepository;
 
-    public List<String> listAllKeys() {
-        List<FileMetadataKeyProjection> files = fileMetadataRepository.findAllBy();
-        return files.stream()
-                .map(FileMetadataKeyProjection::getKey)
-                .collect(Collectors.toList());
+    public List<FileMetadata> listFiles() {
+        return fileMetadataRepository.findAll();
     }
 
     public Optional<FileMetadata> findFileByKey(String key) {
