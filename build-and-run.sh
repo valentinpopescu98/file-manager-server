@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Config
-APP_NAME="demo-aws"
+APP_NAME="file-manager-server"
 CONTAINER_NAME="${APP_NAME}-container"
 IMAGE_NAME="${APP_NAME}-app"
 

@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.valentin</groupId>
-	<artifactId>demo-aws</artifactId>
+	<artifactId>file-manager-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>demo-aws</name>
+	<name>file-manager-server</name>
 	<description>Demo for EC2, S3, RDS, Lambda</description>
 	<url/>
 	<licenses>
