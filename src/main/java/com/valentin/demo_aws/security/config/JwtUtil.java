@@ -18,10 +18,6 @@ public class JwtUtil {
     private final String secret = "this_is_a_very_strong_secret_key_256_bits";
     private final long expirationMillis = 1000 * 60 * 60; // 1 hour
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
-    }
-
     public String generateToken(UserDetails userDetails) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
@@ -69,5 +65,9 @@ public class JwtUtil {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 }

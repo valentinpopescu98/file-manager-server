@@ -5,18 +5,22 @@ import com.valentin.demo_aws.service.EmailService;
 import com.valentin.demo_aws.service.FileService;
 import com.valentin.demo_aws.service.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/files")
+@RequestMapping
 public class FileController {
 
     @Autowired
@@ -33,7 +37,7 @@ public class FileController {
     }
 
     @GetMapping("/download")
-    public ResponseEntity<FileMetadata> downloadFile(@RequestParam String key) {
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String key) {
         Optional<FileMetadata> fileOpt = fileService.findFileByKey(key);
         if (fileOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -42,11 +46,16 @@ public class FileController {
 
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         emailService.sendDownloadNotification(fileMetadata, currentUser);
-        String url = s3Service.generateFileUrl(fileOpt.get().getKey());
 
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create(url))
-                .body(fileMetadata);
+        ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(key);
+        String originalFilename = fileService.getOriginalFilename(key);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + originalFilename + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(fileStream.response().contentLength())
+                .body(new InputStreamResource(fileStream));
     }
 
     @PostMapping("/upload")
@@ -60,8 +69,7 @@ public class FileController {
                     file, file.getOriginalFilename(), description, currentUser);
             emailService.sendUploadConfirmationEmail(fileMetadata, currentUser);
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body("File uploaded successfully");
+            return ResponseEntity.ok("File uploaded successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("File upload failed: " + e.getMessage());

@@ -5,6 +5,8 @@ import com.valentin.demo_aws.repository.FileMetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -27,6 +29,10 @@ public class FileService {
         return fileMetadataRepository.findByKey(key);
     }
 
+    public ResponseInputStream<GetObjectResponse> downloadFile(String key) {
+        return s3Service.downloadFile(key);
+    }
+
     public FileMetadata uploadFile(MultipartFile file, String name, String description, String uploaderEmail)
             throws IOException {
         String key = s3Service.uploadFile(file);
@@ -39,5 +45,9 @@ public class FileService {
     public void deleteFile(String key) {
         s3Service.deleteFile(key);
         fileMetadataRepository.deleteByKey(key);
+    }
+
+    public String getOriginalFilename(String key) {
+        return s3Service.extractOriginalFilename(key);
     }
 }
