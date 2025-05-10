@@ -27,8 +27,10 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${api.client.url}")
-    private String clientUrl;
+    @Value("${api.client.url.ip}")
+    private String clientUrlIp;
+    @Value("${api.client.url.dns}")
+    private String clientUrlDns;
 
     @Autowired
     private OAuth2SuccessHandler oAuth2SuccessHandler;
@@ -64,7 +66,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(clientUrl));
+        config.setAllowedOrigins(List.of(clientUrlIp, clientUrlDns));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("*"));

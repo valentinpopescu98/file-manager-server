@@ -15,7 +15,7 @@ import java.io.IOException;
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    @Value("${api.client.url}")
+    @Value("${api.client.url.ip}")
     private String clientUrl;
 
     @Autowired
