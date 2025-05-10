@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.GET, "/files").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/").authenticated()
                         .requestMatchers(HttpMethod.GET, "/download").authenticated()
                         .requestMatchers(HttpMethod.POST, "/upload").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/delete").authenticated()
