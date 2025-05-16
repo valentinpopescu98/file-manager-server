@@ -6,15 +6,17 @@ Spring Boot Back-End for [file-manager-client](https://github.com/valentinpopesc
 The app is the server of the File Manager app. The app is supposed to allow the user to upload files into the S3 bucket and the files metadata to the RDS database. A Lambda Function is supposed to send an e-mail to the registered user when the upload is complete.
 
 How to run:
-1. Create RDS PostgreSQL database + S3 bucket + EC2 instance; have a ready a GitHub private key
-2. scp -i ~/.ssh/file-manager-key.pem ~/.ssh/id_rsa user@host:~/.ssh/
-3. ssh -i ~/.ssh/file-manager-key.pem user@host
-4. chmod 600 ~/.ssh/id_rsa
-5. git clone git@github.com:valentinpopescu98/file-manager-server.git ~/file-manager-server/
-6. Change IP and DNS at ~/file-manager-server/src/main/resources/application.properties to EC2 instance's IP and DNS (if client and server are hosted on different instances, provide client instance IP and DNS)
-7. sudo apt update && sudo apt install docker.io && sudo usermod -aG docker $USER
-8. newgrp docker
-9. ~/file-manager-server/build-and-run.sh
+1. Create **RDS** PostgreSQL database + **S3** bucket + **EC2** instance; have a ready a GitHub private key
+2. Create IAM role with **AmazonS3FullAccess** and **AmazonSESFullAccess** policies and attach it to EC2 instance
+3. Force **IMDSv2 as required** on the EC2 instance
+4. `scp -i ~/.ssh/file-manager-key.pem ~/.ssh/id_rsa user@host:~/.ssh/`
+5. `ssh -i ~/.ssh/file-manager-key.pem user@host`
+6. `chmod 600 ~/.ssh/id_rsa`
+7. `git clone git@github.com:valentinpopescu98/file-manager-server.git ~/file-manager-server/`
+8. Change IP and DNS at _~/file-manager-server/src/main/resources/application.properties_ to EC2 instance's IP and DNS (if client and server are hosted on different instances, **provide client instance IP and DNS**)
+9. `sudo apt update && sudo apt install docker.io && sudo usermod -aG docker $USER`
+10. `newgrp docker`
+11. `~/file-manager-server/build-and-run.sh`
 
 ---
 
