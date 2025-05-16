@@ -11,7 +11,8 @@ How to run:
 3. ssh -i ~/.ssh/file-manager-key.pem user@host
 4. chmod 600 ~/.ssh/id_rsa
 5. git clone git@github.com:valentinpopescu98/file-manager-server.git ~/file-manager-server/
-6. ~/file-manager-server/build-and-run.sh
+6. Change IP and DNS at ~/file-manager-server/src/main/resources/application.properties to EC2 instance's IP and DNS (if client and server are hosted on different instances, provide client instance IP and DNS)
+7. ~/file-manager-server/build-and-run.sh
 
 ---
 
