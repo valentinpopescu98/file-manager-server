@@ -18,7 +18,7 @@ docker rm -f $CONTAINER_NAME 2>/dev/null || true
 
 # Run application in container with port 8080 open
 echo "Starting new container..."
-docker run -d \
+docker run -d --network host \
   --name $CONTAINER_NAME \
   -p 8080:8080 \
   $IMAGE_NAME
