@@ -1,4 +1,4 @@
-package com.valentin.demo_aws.model;
+package com.valentin.file_manager.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

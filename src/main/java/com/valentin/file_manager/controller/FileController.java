@@ -1,9 +1,9 @@
-package com.valentin.demo_aws.controller;
+package com.valentin.file_manager.controller;
 
-import com.valentin.demo_aws.model.FileMetadata;
-import com.valentin.demo_aws.service.EmailService;
-import com.valentin.demo_aws.service.FileService;
-import com.valentin.demo_aws.service.S3Service;
+import com.valentin.file_manager.model.FileMetadata;
+import com.valentin.file_manager.service.EmailService;
+import com.valentin.file_manager.service.FileService;
+import com.valentin.file_manager.service.S3Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;

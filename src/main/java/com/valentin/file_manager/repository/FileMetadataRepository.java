@@ -1,6 +1,6 @@
-package com.valentin.demo_aws.repository;
+package com.valentin.file_manager.repository;
 
-import com.valentin.demo_aws.model.FileMetadata;
+import com.valentin.file_manager.model.FileMetadata;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

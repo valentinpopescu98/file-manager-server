@@ -1,4 +1,4 @@
-package com.valentin.demo_aws.security.model;
+package com.valentin.file_manager.security.model;
 
 import lombok.Getter;
 import lombok.Setter;

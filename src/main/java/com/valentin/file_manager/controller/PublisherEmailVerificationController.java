@@ -1,6 +1,6 @@
-package com.valentin.demo_aws.controller;
+package com.valentin.file_manager.controller;
 
-import com.valentin.demo_aws.service.PublisherEmailVerificationService;
+import com.valentin.file_manager.service.PublisherEmailVerificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

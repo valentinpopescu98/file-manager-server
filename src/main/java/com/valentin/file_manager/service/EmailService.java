@@ -1,6 +1,6 @@
-package com.valentin.demo_aws.service;
+package com.valentin.file_manager.service;
 
-import com.valentin.demo_aws.model.FileMetadata;
+import com.valentin.file_manager.model.FileMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

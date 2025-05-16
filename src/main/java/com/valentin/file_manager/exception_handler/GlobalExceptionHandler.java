@@ -1,4 +1,4 @@
-package com.valentin.demo_aws.exception_handler;
+package com.valentin.file_manager.exception_handler;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

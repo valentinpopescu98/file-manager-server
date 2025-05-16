@@ -1,4 +1,4 @@
-package com.valentin.demo_aws.security.config;
+package com.valentin.file_manager.security.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

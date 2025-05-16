@@ -1,8 +1,8 @@
-package com.valentin.demo_aws.security.controller;
+package com.valentin.file_manager.security.controller;
 
-import com.valentin.demo_aws.security.config.JwtUtil;
-import com.valentin.demo_aws.security.model.AuthRequest;
-import com.valentin.demo_aws.security.model.AuthResponse;
+import com.valentin.file_manager.security.config.JwtUtil;
+import com.valentin.file_manager.security.model.AuthRequest;
+import com.valentin.file_manager.security.model.AuthResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;

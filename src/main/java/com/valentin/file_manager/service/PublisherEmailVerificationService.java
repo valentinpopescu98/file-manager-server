@@ -1,4 +1,4 @@
-package com.valentin.demo_aws.service;
+package com.valentin.file_manager.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

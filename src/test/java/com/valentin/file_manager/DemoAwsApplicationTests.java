@@ -1,4 +1,4 @@
-package com.valentin.demo_aws;
+package com.valentin.file_manager;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
