@@ -1,13 +1,13 @@
-package com.valentin.file_manager;
+package com.valentin.file_manager_server;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DemoAwsApplication {
+public class FileManagerServerApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DemoAwsApplication.class, args);
+		SpringApplication.run(FileManagerServerApplication.class, args);
 	}
 
 }

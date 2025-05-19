@@ -1,5 +1,6 @@
-package com.valentin.file_manager.security.config;
+package com.valentin.file_manager_server.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,11 +30,16 @@ public class SecurityConfig {
     @Value("${api.client.url}")
     private String clientUrl;
 
+    @Autowired
+    private OAuth2SuccessHandler oAuth2SuccessHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
+                .httpBasic(auth -> auth.disable())
+                .formLogin(form -> form.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -43,12 +49,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/upload").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/delete").authenticated()
                         .requestMatchers(HttpMethod.POST, "/verify-email").hasRole("ADMIN")
-                        .requestMatchers("/login", "/error", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/login", "oauth2/**", "/login/oauth2/**", "/oauth2/success",
+                                "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(auth -> auth.disable())
-                .formLogin(form -> form.disable());
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler)
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

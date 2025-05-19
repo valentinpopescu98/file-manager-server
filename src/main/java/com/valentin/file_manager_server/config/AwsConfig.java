@@ -1,4 +1,4 @@
-package com.valentin.file_manager.config;
+package com.valentin.file_manager_server.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

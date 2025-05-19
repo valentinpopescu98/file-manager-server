@@ -1,4 +1,4 @@
-package com.valentin.file_manager.security.model;
+package com.valentin.file_manager_server.model;
 
 import lombok.Getter;
 import lombok.Setter;

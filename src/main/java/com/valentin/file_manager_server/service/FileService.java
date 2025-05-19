@@ -1,7 +1,7 @@
-package com.valentin.file_manager.service;
+package com.valentin.file_manager_server.service;
 
-import com.valentin.file_manager.model.FileMetadata;
-import com.valentin.file_manager.repository.FileMetadataRepository;
+import com.valentin.file_manager_server.model.FileMetadata;
+import com.valentin.file_manager_server.repository.FileMetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,22 +1,30 @@
-package com.valentin.file_manager.security.config;
+package com.valentin.file_manager_server.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class JwtUtil {
 
-    private final String secret = "this_is_a_very_strong_secret_key_256_bits";
+    private final String secret;
     private final long expirationMillis = 1000 * 60 * 60; // 1 hour
+
+    public JwtUtil(@Value("${jwt.secret}") String secretValue) {
+        this.secret = Base64.getEncoder().encodeToString(secretValue.getBytes());
+    }
+
+    public String generateToken(String username) {
+        User user = new User(username, "", List.of(() -> "USER"));
+        return generateToken(user);
+    }
 
     public String generateToken(UserDetails userDetails) {
         Date now = new Date();

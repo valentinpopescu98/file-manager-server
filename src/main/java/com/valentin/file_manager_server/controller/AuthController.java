@@ -1,8 +1,8 @@
-package com.valentin.file_manager.security.controller;
+package com.valentin.file_manager_server.controller;
 
-import com.valentin.file_manager.security.config.JwtUtil;
-import com.valentin.file_manager.security.model.AuthRequest;
-import com.valentin.file_manager.security.model.AuthResponse;
+import com.valentin.file_manager_server.model.AuthRequest;
+import com.valentin.file_manager_server.model.AuthResponse;
+import com.valentin.file_manager_server.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -31,7 +31,6 @@ public class AuthController {
             }
 
             String token = jwtUtil.generateToken(user);
-
             return ResponseEntity.ok(new AuthResponse(token));
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid credentials");

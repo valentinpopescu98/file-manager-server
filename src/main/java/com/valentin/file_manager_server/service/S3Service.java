@@ -1,4 +1,4 @@
-package com.valentin.file_manager.service;
+package com.valentin.file_manager_server.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

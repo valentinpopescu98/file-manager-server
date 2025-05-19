@@ -1,4 +1,4 @@
-package com.valentin.file_manager.model;
+package com.valentin.file_manager_server.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package com.valentin.file_manager.security.config;
+package com.valentin.file_manager_server.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
