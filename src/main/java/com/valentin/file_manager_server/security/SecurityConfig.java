@@ -1,5 +1,6 @@
 package com.valentin.file_manager_server.security;
 
+import com.valentin.file_manager_server.service.AppUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,12 +10,9 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -34,6 +32,8 @@ public class SecurityConfig {
 
     @Autowired
     private OAuth2SuccessHandler oAuth2SuccessHandler;
+    @Autowired
+    private AppUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {
@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(auth -> auth.disable())
                 .formLogin(form -> form.disable())
+                .userDetailsService(userDetailsService)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -75,22 +76,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails admin = User.builder()
-                .username("valentinpopescu98.business@gmail.com")
-                .password(passwordEncoder().encode("adminpass"))
-                .roles("ADMIN")
-                .build();
-        UserDetails user = User.builder()
-                .username("valentinpopescu98@gmail.com")
-                .password(passwordEncoder().encode("userpass"))
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, user);
     }
 
     @Bean

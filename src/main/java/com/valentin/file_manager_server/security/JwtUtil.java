@@ -1,5 +1,6 @@
 package com.valentin.file_manager_server.security;
 
+import com.valentin.file_manager_server.model.AppUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,11 +20,6 @@ public class JwtUtil {
 
     public JwtUtil(@Value("${jwt.secret}") String secretValue) {
         this.secret = Base64.getEncoder().encodeToString(secretValue.getBytes());
-    }
-
-    public String generateToken(String username) {
-        User user = new User(username, "", List.of(() -> "USER"));
-        return generateToken(user);
     }
 
     public String generateToken(UserDetails userDetails) {

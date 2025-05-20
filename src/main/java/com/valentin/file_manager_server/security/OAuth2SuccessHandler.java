@@ -1,5 +1,7 @@
 package com.valentin.file_manager_server.security;
 
+import com.valentin.file_manager_server.model.AppUser;
+import com.valentin.file_manager_server.service.AppUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private AppUserDetailsService userService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -27,7 +31,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
         String email = authToken.getPrincipal().getAttribute("email");
 
-        String jwt = jwtUtil.generateToken(email);
+        AppUser user = userService.createOAuth2UserIfNotPresent(email);
+
+        String jwt = jwtUtil.generateToken(user.toUserDetails());
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(clientUrl + "/oauth2/success")
                 .queryParam("token", jwt)
