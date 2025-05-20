@@ -2,6 +2,7 @@ package com.valentin.file_manager_server.service;
 
 import com.valentin.file_manager_server.model.FileMetadata;
 import com.valentin.file_manager_server.repository.FileMetadataRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,13 +14,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class FileService {
 
-    @Autowired
-    private S3Service s3Service;
-    @Autowired
-    private FileMetadataRepository fileMetadataRepository;
+    private final S3Service s3Service;
+    private final FileMetadataRepository fileMetadataRepository;
 
     public List<FileMetadata> listFiles() {
         return fileMetadataRepository.findAll();

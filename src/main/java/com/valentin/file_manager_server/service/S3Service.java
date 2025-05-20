@@ -1,5 +1,6 @@
 package com.valentin.file_manager_server.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,16 +20,15 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 public class S3Service {
 
     @Value("${aws.s3.bucketName}")
     private String bucketName;
 
-    @Autowired
-    private S3Client s3Client;
-    @Autowired
-    private S3Presigner s3Presigner;
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
 
     public ResponseInputStream<GetObjectResponse> downloadFile(String key) {
         GetObjectRequest request = GetObjectRequest.builder()

@@ -4,6 +4,7 @@ import com.valentin.file_manager_server.model.FileMetadata;
 import com.valentin.file_manager_server.service.EmailService;
 import com.valentin.file_manager_server.service.FileService;
 import com.valentin.file_manager_server.service.S3Service;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -19,16 +20,14 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping
 public class FileController {
 
-    @Autowired
-    private FileService fileService;
-    @Autowired
-    private S3Service s3Service;
-    @Autowired
-    private EmailService emailService;
+    private final FileService fileService;
+    private final S3Service s3Service;
+    private final EmailService emailService;
 
     @GetMapping
     public ResponseEntity<List<FileMetadata>> listFiles() {

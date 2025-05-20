@@ -1,20 +1,21 @@
 package com.valentin.file_manager_server.service;
 
 import com.valentin.file_manager_server.model.FileMetadata;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
 
+@RequiredArgsConstructor
 @Service
 public class EmailService {
 
     @Value("${aws.ses.publisher.email}")
     private String publisherEmail;
 
-    @Autowired
-    private SesClient sesClient;
+    private final SesClient sesClient;
 
     public void sendDownloadNotification(FileMetadata metadata, String actionBy) {
         String subject = "File downloaded";

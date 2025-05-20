@@ -4,6 +4,7 @@ import com.valentin.file_manager_server.model.AppUser;
 import com.valentin.file_manager_server.service.AppUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -14,16 +15,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     @Value("${api.client.url.ip}")
     private String clientUrl;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private AppUserDetailsService userService;
+    private final JwtUtil jwtUtil;
+    private final AppUserDetailsService userService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,

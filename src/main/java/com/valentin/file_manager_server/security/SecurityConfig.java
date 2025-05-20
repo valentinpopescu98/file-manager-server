@@ -1,6 +1,7 @@
 package com.valentin.file_manager_server.security;
 
 import com.valentin.file_manager_server.service.AppUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -30,10 +32,8 @@ public class SecurityConfig {
     @Value("${api.client.url.dns}")
     private String clientUrlDns;
 
-    @Autowired
-    private OAuth2SuccessHandler oAuth2SuccessHandler;
-    @Autowired
-    private AppUserDetailsService userDetailsService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final AppUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {

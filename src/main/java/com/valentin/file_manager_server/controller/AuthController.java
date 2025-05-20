@@ -4,6 +4,7 @@ import com.valentin.file_manager_server.model.AuthRequest;
 import com.valentin.file_manager_server.model.AuthResponse;
 import com.valentin.file_manager_server.security.JwtUtil;
 import com.valentin.file_manager_server.service.AppUserDetailsService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,13 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@RequiredArgsConstructor
 @RestController
 public class AuthController {
 
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private AppUserDetailsService userDetailsService;
+    private final JwtUtil jwtUtil;
+    private final AppUserDetailsService userDetailsService;
 
     @PostMapping("/login")
     public ResponseEntity<?> regularLogin(@RequestBody AuthRequest request) {
