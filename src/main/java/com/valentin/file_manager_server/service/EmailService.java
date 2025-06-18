@@ -4,6 +4,7 @@ import com.valentin.file_manager_server.model.FileMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
@@ -17,6 +18,7 @@ public class EmailService {
 
     private final SesClient sesClient;
 
+    @Async
     public void sendDownloadNotification(FileMetadata metadata, String actionBy) {
         String subject = "File downloaded";
         String body = String.format("""
@@ -35,6 +37,7 @@ public class EmailService {
         sendEmail(metadata.getUploaderEmail(), subject, body);
     }
 
+    @Async
     public void sendUploadConfirmationEmail(FileMetadata metadata, String actionBy) {
         String subject = "File uploaded successfully";
         String body = String.format("""
@@ -53,6 +56,7 @@ public class EmailService {
         sendEmail(metadata.getUploaderEmail(), subject, body);
     }
 
+    @Async
     public void sendDeleteNotification(FileMetadata metadata, String actionBy) {
         String subject = "File deleted";
         String body = String.format("""
@@ -81,6 +85,10 @@ public class EmailService {
                 .source(publisherEmail)
                 .build();
 
-        sesClient.sendEmail(request);
+        try {
+            sesClient.sendEmail(request);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
+        }
     }
 }

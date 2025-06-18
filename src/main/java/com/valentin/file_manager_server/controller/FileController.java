@@ -51,12 +51,7 @@ public class FileController {
             FileMetadata fileMetadata = fileOpt.get();
             ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(s3Key);
 
-            try {
-                emailService.sendDownloadNotification(fileMetadata, currentUser);
-            } catch (Exception e) {
-                System.err.println("Failed to send email: " + e.getMessage());
-                throw new RuntimeException("Email error: " + e.getMessage(), e);
-            }
+            emailService.sendDownloadNotification(fileMetadata, currentUser);
 
             String originalFilename = fileService.getOriginalFilename(s3Key);
             return ResponseEntity.ok()
@@ -81,12 +76,7 @@ public class FileController {
             FileMetadata fileMetadata = fileService.uploadFile(
                     file, file.getOriginalFilename(), description, currentUser);
 
-            try {
-                emailService.sendUploadConfirmationEmail(fileMetadata, currentUser);
-            } catch (Exception e) {
-                System.err.println("Failed to send email: " + e.getMessage());
-                throw new RuntimeException("Email error: " + e.getMessage(), e);
-            }
+            emailService.sendUploadConfirmationEmail(fileMetadata, currentUser);
 
             return ResponseEntity.ok("File uploaded successfully");
         } catch (Exception e) {
@@ -108,12 +98,7 @@ public class FileController {
             FileMetadata fileMetadata = fileOpt.get();
             fileService.deleteFile(s3Key);
 
-            try {
-                emailService.sendDeleteNotification(fileMetadata, currentUser);
-            } catch (Exception e) {
-                System.err.println("Failed to send email: " + e.getMessage());
-                throw new RuntimeException("Email error: " + e.getMessage(), e);
-            }
+            emailService.sendDeleteNotification(fileMetadata, currentUser);
 
             return ResponseEntity.ok("File deleted successfully");
         } catch (Exception e) {
