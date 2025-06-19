@@ -5,7 +5,7 @@ import com.valentin.file_manager_server.model.AuthResponse;
 import com.valentin.file_manager_server.security.JwtUtil;
 import com.valentin.file_manager_server.service.AppUserDetailsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +22,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> regularLogin(@RequestBody AuthRequest request) {
+
         try {
             UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
 
@@ -32,18 +33,25 @@ public class AuthController {
             String token = jwtUtil.generateToken(user);
             return ResponseEntity.ok(new AuthResponse(token));
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid credentials: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid credentials: " + e.getMessage());
         }
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> regularRegister(@RequestBody AuthRequest req) {
-        if (userDetailsService.existsByEmail(req.getEmail())) {
-            return ResponseEntity.badRequest().body("Email already registered.");
+
+        try {
+            if (userDetailsService.existsByEmail(req.getEmail())) {
+                return ResponseEntity.badRequest().body("Email already registered.");
+            }
+
+            userDetailsService.createRegularUser(req.getEmail(), req.getPassword());
+
+            return ResponseEntity.ok("User registered.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Register failed: " + e.getMessage());
         }
-
-        userDetailsService.createRegularUser(req.getEmail(), req.getPassword());
-
-        return ResponseEntity.ok("User registered.");
     }
 }

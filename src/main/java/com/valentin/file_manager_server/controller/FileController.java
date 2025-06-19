@@ -3,9 +3,7 @@ package com.valentin.file_manager_server.controller;
 import com.valentin.file_manager_server.model.FileMetadata;
 import com.valentin.file_manager_server.service.EmailService;
 import com.valentin.file_manager_server.service.FileService;
-import com.valentin.file_manager_server.service.S3Service;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,35 +24,51 @@ import java.util.Optional;
 public class FileController {
 
     private final FileService fileService;
-    private final S3Service s3Service;
     private final EmailService emailService;
 
     @GetMapping
-    public ResponseEntity<List<FileMetadata>> listFiles() {
-        List<FileMetadata> files = fileService.listFiles();
-        return ResponseEntity.ok(files);
+    public ResponseEntity<?> listFiles() {
+
+        try {
+            List<FileMetadata> files = fileService.listFiles();
+            return ResponseEntity.ok(files);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("File metadata fetch failed: " + e.getMessage());
+        }
     }
 
     @GetMapping("/download")
-    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String s3Key) {
-        Optional<FileMetadata> fileOpt = fileService.findFileByKey(s3Key);
-        if (fileOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> downloadFile(@RequestParam String s3Key) {
+
+        try {
+            Optional<FileMetadata> fileOpt = fileService.findFileByKey(s3Key);
+            if (fileOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+            FileMetadata fileMetadata = fileOpt.get();
+            ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(s3Key);
+
+            try {
+                emailService.sendDownloadNotification(fileMetadata, currentUser);
+            } catch (Exception e) {
+                System.err.println("Failed to send email: " + e.getMessage());
+                throw new RuntimeException("Email error: " + e.getMessage(), e);
+            }
+
+            String originalFilename = fileService.getOriginalFilename(s3Key);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + originalFilename + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(fileStream.response().contentLength())
+                    .body(new InputStreamResource(fileStream));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("File download failed: " + e.getMessage());
         }
-        FileMetadata fileMetadata = fileOpt.get();
-
-        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        emailService.sendDownloadNotification(fileMetadata, currentUser);
-
-        ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(s3Key);
-        String originalFilename = fileService.getOriginalFilename(s3Key);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + originalFilename + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(fileStream.response().contentLength())
-                .body(new InputStreamResource(fileStream));
     }
 
     @PostMapping("/upload")
@@ -66,7 +80,13 @@ public class FileController {
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
             FileMetadata fileMetadata = fileService.uploadFile(
                     file, file.getOriginalFilename(), description, currentUser);
-            emailService.sendUploadConfirmationEmail(fileMetadata, currentUser);
+
+            try {
+                emailService.sendUploadConfirmationEmail(fileMetadata, currentUser);
+            } catch (Exception e) {
+                System.err.println("Failed to send email: " + e.getMessage());
+                throw new RuntimeException("Email error: " + e.getMessage(), e);
+            }
 
             return ResponseEntity.ok("File uploaded successfully");
         } catch (Exception e) {
@@ -83,11 +103,17 @@ public class FileController {
             if (fileOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            FileMetadata fileMetadata = fileOpt.get();
 
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            emailService.sendDeleteNotification(fileMetadata, currentUser);
+            FileMetadata fileMetadata = fileOpt.get();
             fileService.deleteFile(s3Key);
+
+            try {
+                emailService.sendDeleteNotification(fileMetadata, currentUser);
+            } catch (Exception e) {
+                System.err.println("Failed to send email: " + e.getMessage());
+                throw new RuntimeException("Email error: " + e.getMessage(), e);
+            }
 
             return ResponseEntity.ok("File deleted successfully");
         } catch (Exception e) {

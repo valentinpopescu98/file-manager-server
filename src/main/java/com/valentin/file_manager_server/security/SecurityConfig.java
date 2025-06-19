@@ -28,10 +28,8 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${api.client.url.ip}")
-    private String clientUrlIp;
-    @Value("${api.client.url.dns}")
-    private String clientUrlDns;
+    @Value("${api.client.url}")
+    private String clientUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -83,7 +81,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(clientUrlIp, clientUrlDns));
+        config.setAllowedOrigins(List.of(clientUrl));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("*"));
