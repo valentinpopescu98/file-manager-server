@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+    image: file-manager-server-app
+    container_name: file-manager-server-container
+    ports:
+      - "8080:8080"
+    networks:
+      - file-manager-network
+    volumes:
+      - ./logs:/app/logs
+
+networks:
+  file-manager-network:
+    external: true
