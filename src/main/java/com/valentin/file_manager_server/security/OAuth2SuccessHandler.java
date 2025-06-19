@@ -5,6 +5,7 @@ import com.valentin.file_manager_server.service.AppUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -14,6 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
@@ -30,7 +32,20 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
         String email = authToken.getPrincipal().getAttribute("email");
 
-        AppUser user = userService.createOAuth2UserIfNotPresent(email);
+        if (email == null) {
+            log.warn("OAuth2 provider did not return an email");
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Email not available from provider");
+            return;
+        }
+
+        AppUser user;
+        try {
+            user = userService.getOrCreateOAuth2User(email);
+        } catch (Exception e) {
+            log.error("Error during user registration", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "User registration failed");
+            return;
+        }
 
         String jwt = jwtUtil.generateToken(user);
         String redirectUrl = UriComponentsBuilder
@@ -38,7 +53,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 .queryParam("token", jwt)
                 .build()
                 .toUriString();
-
         response.sendRedirect(redirectUrl);
     }
 }

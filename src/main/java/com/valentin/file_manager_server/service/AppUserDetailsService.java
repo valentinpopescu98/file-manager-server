@@ -2,8 +2,8 @@ package com.valentin.file_manager_server.service;
 
 import com.valentin.file_manager_server.model.AppUser;
 import com.valentin.file_manager_server.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +17,7 @@ public class AppUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PublisherEmailVerificationService emailVerificationService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -30,7 +31,10 @@ public class AppUserDetailsService implements UserDetailsService {
                 .build();
     }
 
+    @Transactional
     public AppUser createRegularUser(String email, String password) {
+        emailVerificationService.verifyEmail(email);
+
         AppUser newUser = new AppUser();
         newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password));
@@ -38,15 +42,21 @@ public class AppUserDetailsService implements UserDetailsService {
         return userRepository.save(newUser);
     }
 
-    public AppUser createOAuth2UserIfNotPresent(String email) {
+    @Transactional
+    private AppUser createOAuth2User(String email) {
+        emailVerificationService.verifyEmail(email);
+
+        AppUser newUser = new AppUser();
+        newUser.setEmail(email);
+        newUser.setPassword("");
+        newUser.setFromOAuth2(true);
+        return userRepository.save(newUser);
+    }
+
+    @Transactional
+    public AppUser getOrCreateOAuth2User(String email) {
         return userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    AppUser newUser = new AppUser();
-                    newUser.setEmail(email);
-                    newUser.setPassword("");
-                    newUser.setFromOAuth2(true);
-                    return userRepository.save(newUser);
-                });
+            .orElseGet(() -> createOAuth2User(email));
     }
 
     public boolean existsByEmail(String email) {
