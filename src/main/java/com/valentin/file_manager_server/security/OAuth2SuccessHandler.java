@@ -5,7 +5,6 @@ import com.valentin.file_manager_server.service.AppUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -33,7 +32,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         AppUser user = userService.createOAuth2UserIfNotPresent(email);
 
-        String jwt = jwtUtil.generateToken(user.toUserDetails());
+        String jwt = jwtUtil.generateToken(user);
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(clientUrl + "/oauth2/success")
                 .queryParam("token", jwt)

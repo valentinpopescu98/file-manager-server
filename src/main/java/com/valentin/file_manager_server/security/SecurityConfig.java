@@ -1,8 +1,7 @@
 package com.valentin.file_manager_server.security;
 
-import com.valentin.file_manager_server.service.AppUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +13,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -32,11 +33,11 @@ public class SecurityConfig {
     @Value("${api.client.url.dns}")
     private String clientUrlDns;
 
-    private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final AppUserDetailsService userDetailsService;
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, JwtAuthFilter jwtFilter,
+            UserDetailsService userDetailsService, AuthenticationSuccessHandler oAuth2SuccessHandler)
+            throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
@@ -52,16 +53,31 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/upload").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/delete").authenticated()
                         .requestMatchers(HttpMethod.POST, "/verify-email").hasRole("ADMIN")
-                        .requestMatchers("/login", "oauth2/**", "/login/oauth2/**", "/oauth2/success",
+                        .requestMatchers("/login", "/register",
+                                "/oauth2/**", "/login/oauth2/**", "/oauth2/success",
                                 "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oAuth2SuccessHandler)
+                        .authorizationEndpoint(auth -> auth
+                                .baseUri("/oauth2/authorization")
+                        )
+                        .loginPage("/login")
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(restAuthenticationEntryPoint())
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationEntryPoint restAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+        };
     }
 
     @Bean
@@ -81,10 +97,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public JwtAuthFilter jwtAuthFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
-        return new JwtAuthFilter(jwtUtil, userDetailsService);
     }
 }
