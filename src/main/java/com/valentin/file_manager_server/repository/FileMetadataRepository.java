@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long> {
 
-    Optional<FileMetadata> findByKey(String key);
+    Optional<FileMetadata> findByS3Key(String s3Key);
     @Transactional
-    void deleteByKey(String key);
+    void deleteByS3Key(String s3Key);
 }

@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "user", indexes = @Index(name = "key_idx", columnList = "key"))
+@Table(name = "app_user")
 public class AppUser {
 
         @Id

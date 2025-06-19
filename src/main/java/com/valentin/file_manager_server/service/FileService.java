@@ -25,29 +25,29 @@ public class FileService {
         return fileMetadataRepository.findAll();
     }
 
-    public Optional<FileMetadata> findFileByKey(String key) {
-        return fileMetadataRepository.findByKey(key);
+    public Optional<FileMetadata> findFileByKey(String s3Key) {
+        return fileMetadataRepository.findByS3Key(s3Key);
     }
 
-    public ResponseInputStream<GetObjectResponse> downloadFile(String key) {
-        return s3Service.downloadFile(key);
+    public ResponseInputStream<GetObjectResponse> downloadFile(String s3Key) {
+        return s3Service.downloadFile(s3Key);
     }
 
     public FileMetadata uploadFile(MultipartFile file, String name, String description, String uploaderEmail)
             throws IOException {
-        String key = s3Service.uploadFile(file);
-        String url = s3Service.generateFileUrl(key);
+        String s3Key = s3Service.uploadFile(file);
+        String url = s3Service.generateFileUrl(s3Key);
 
-        FileMetadata fileMetadata = new FileMetadata(name, description, uploaderEmail, key, url, LocalDateTime.now());
+        FileMetadata fileMetadata = new FileMetadata(name, description, uploaderEmail, s3Key, url, LocalDateTime.now());
         return fileMetadataRepository.save(fileMetadata);
     }
 
-    public void deleteFile(String key) {
-        s3Service.deleteFile(key);
-        fileMetadataRepository.deleteByKey(key);
+    public void deleteFile(String s3Key) {
+        s3Service.deleteFile(s3Key);
+        fileMetadataRepository.deleteByS3Key(s3Key);
     }
 
-    public String getOriginalFilename(String key) {
-        return s3Service.extractOriginalFilename(key);
+    public String getOriginalFilename(String s3Key) {
+        return s3Service.extractOriginalFilename(s3Key);
     }
 }

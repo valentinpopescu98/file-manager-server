@@ -36,8 +36,8 @@ public class FileController {
     }
 
     @GetMapping("/download")
-    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String key) {
-        Optional<FileMetadata> fileOpt = fileService.findFileByKey(key);
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestParam String s3Key) {
+        Optional<FileMetadata> fileOpt = fileService.findFileByKey(s3Key);
         if (fileOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -46,8 +46,8 @@ public class FileController {
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         emailService.sendDownloadNotification(fileMetadata, currentUser);
 
-        ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(key);
-        String originalFilename = fileService.getOriginalFilename(key);
+        ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(s3Key);
+        String originalFilename = fileService.getOriginalFilename(s3Key);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -76,10 +76,10 @@ public class FileController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteFile(@RequestParam String key) {
+    public ResponseEntity<String> deleteFile(@RequestParam String s3Key) {
 
         try {
-            Optional<FileMetadata> fileOpt = fileService.findFileByKey(key);
+            Optional<FileMetadata> fileOpt = fileService.findFileByKey(s3Key);
             if (fileOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
@@ -87,7 +87,7 @@ public class FileController {
 
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
             emailService.sendDeleteNotification(fileMetadata, currentUser);
-            fileService.deleteFile(key);
+            fileService.deleteFile(s3Key);
 
             return ResponseEntity.ok("File deleted successfully");
         } catch (Exception e) {

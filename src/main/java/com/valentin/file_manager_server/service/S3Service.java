@@ -30,10 +30,10 @@ public class S3Service {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
-    public ResponseInputStream<GetObjectResponse> downloadFile(String key) {
+    public ResponseInputStream<GetObjectResponse> downloadFile(String s3Key) {
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucketName)
-                .key(key)
+                .key(s3Key)
                 .build();
         return s3Client.getObject(request);
     }
@@ -52,10 +52,10 @@ public class S3Service {
         return fileName;
     }
 
-    public String generateFileUrl(String key) {
+    public String generateFileUrl(String s3Key) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
-                .key(key)
+                .key(s3Key)
                 .build();
 
         GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
@@ -66,17 +66,17 @@ public class S3Service {
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
-    public void deleteFile(String key) {
+    public void deleteFile(String s3Key) {
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
-                .key(key)
+                .key(s3Key)
                 .build();
 
         s3Client.deleteObject(deleteObjectRequest);
     }
 
-    public String extractOriginalFilename(String key) {
-        String[] parts = key.split("_", 2);
-        return parts.length > 1 ? parts[1] : key;
+    public String extractOriginalFilename(String s3Key) {
+        String[] parts = s3Key.split("_", 2);
+        return parts.length > 1 ? parts[1] : s3Key;
     }
 }
