@@ -12,6 +12,8 @@ services:
       - file-manager-network
     volumes:
       - ./logs:/app/logs
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
 
 networks:
   file-manager-network:
