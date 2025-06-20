@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping
+@RequestMapping("/api")
 public class FileController {
 
     private final FileService fileService;

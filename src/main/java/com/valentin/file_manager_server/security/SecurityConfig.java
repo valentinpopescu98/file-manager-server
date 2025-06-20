@@ -46,13 +46,13 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.GET, "/").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/download").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/upload").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/delete").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/verify-email").hasRole("ADMIN")
-                        .requestMatchers("/login", "/register",
-                                "/oauth2/**", "/login/oauth2/**", "/oauth2/success",
+                        .requestMatchers(HttpMethod.GET, "/api").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/download").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/upload").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/delete").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/verify-email").hasRole("ADMIN")
+                        .requestMatchers("/api/login", "/api/register",
+                                "/login/oauth2/code/**", "/oauth2/success",
                                 "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
                 )
