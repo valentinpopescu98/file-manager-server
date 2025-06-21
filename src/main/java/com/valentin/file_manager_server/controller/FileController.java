@@ -1,10 +1,10 @@
 package com.valentin.file_manager_server.controller;
 
 import com.valentin.file_manager_server.model.FileMetadata;
-import com.valentin.file_manager_server.service.EmailService;
+import com.valentin.file_manager_server.model.UploadStatus;
+import com.valentin.file_manager_server.model.UploadStatusResponse;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,11 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -24,7 +23,6 @@ import java.util.Optional;
 public class FileController {
 
     private final FileService fileService;
-    private final EmailService emailService;
 
     @GetMapping
     public ResponseEntity<?> listFiles() {
@@ -42,43 +40,41 @@ public class FileController {
     public ResponseEntity<?> downloadFile(@RequestParam String s3Key) {
 
         try {
-            Optional<FileMetadata> fileOpt = fileService.findFileByKey(s3Key);
-            if (fileOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            FileMetadata fileMetadata = fileOpt.get();
-            ResponseInputStream<GetObjectResponse> fileStream = fileService.downloadFile(s3Key);
-
-            emailService.sendDownloadNotification(fileMetadata, currentUser);
+            StreamingResponseBody body = fileService.downloadFile(s3Key, currentUser);
 
             String originalFilename = fileService.getOriginalFilename(s3Key);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"" + originalFilename + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(fileStream.response().contentLength())
-                    .body(new InputStreamResource(fileStream));
-        } catch (Exception e) {
+                    .body(body);
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("File not found");
+        }
+        catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("File download failed: " + e.getMessage());
         }
     }
 
+    @GetMapping("/upload/status")
+    public ResponseEntity<UploadStatusResponse> getUploadStatus(@RequestParam String uploadId) {
+        UploadStatus status = fileService.getUploadStatus(uploadId);
+        return ResponseEntity.ok(new UploadStatusResponse(status));
+    }
+
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(
+    public ResponseEntity<String> startUploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("description") String description) {
 
         try {
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            FileMetadata fileMetadata = fileService.uploadFile(
-                    file, file.getOriginalFilename(), description, currentUser);
+            String uploadId = fileService.startUploadFile(file, file.getOriginalFilename(), description, currentUser);
 
-            emailService.sendUploadConfirmationEmail(fileMetadata, currentUser);
-
-            return ResponseEntity.ok("File uploaded successfully");
+            return ResponseEntity.accepted().body(uploadId);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("File upload failed: " + e.getMessage());
@@ -89,19 +85,15 @@ public class FileController {
     public ResponseEntity<String> deleteFile(@RequestParam String s3Key) {
 
         try {
-            Optional<FileMetadata> fileOpt = fileService.findFileByKey(s3Key);
-            if (fileOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            FileMetadata fileMetadata = fileOpt.get();
-            fileService.deleteFile(s3Key);
-
-            emailService.sendDeleteNotification(fileMetadata, currentUser);
+            fileService.deleteFile(s3Key, currentUser);
 
             return ResponseEntity.ok("File deleted successfully");
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("File not found");
+        }
+        catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error: " + e.getMessage());
         }

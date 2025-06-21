@@ -1,10 +1,8 @@
 package com.valentin.file_manager_server.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,6 +13,8 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -38,16 +38,19 @@ public class S3Service {
         return s3Client.getObject(request);
     }
 
-    public String uploadFile(MultipartFile file) throws IOException {
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        InputStream inputStream = file.getInputStream();
+    public String uploadFile(File file) throws IOException {
+        String fileName = UUID.randomUUID() + "_" + file.getName();
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
                 .build();
 
-        s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
+        try (InputStream inputStream = new FileInputStream(file)) {
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, file.length()));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to upload file to S3: " + e.getMessage(), e);
+        }
 
         return fileName;
     }
