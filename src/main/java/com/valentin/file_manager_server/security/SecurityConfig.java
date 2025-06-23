@@ -2,6 +2,7 @@ package com.valentin.file_manager_server.security;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
@@ -65,16 +68,50 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(restAuthenticationEntryPoint())
+                        .accessDeniedHandler(restAuthenticationDeniedHandler())
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    @Bean
-    public AuthenticationEntryPoint restAuthenticationEntryPoint() {
+    private AuthenticationEntryPoint restAuthenticationEntryPoint() {
         return (request, response, authException) -> {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            if (!response.isCommitted()) {
+                log.warn("Auth entry point triggered: {}", authException.getMessage());
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+
+                String jsonResponse = "{\"error\": \"Unauthorized\", \"message\": \""
+                        + authException.getMessage() + "\"}";
+
+                response.getWriter().write(jsonResponse);
+                response.getWriter().flush();
+            } else {
+                log.warn("Auth entry point: response already committed");
+            }
+        };
+    }
+
+    private AccessDeniedHandler restAuthenticationDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            if (!response.isCommitted()) {
+                log.warn("Access denied: {}", accessDeniedException.getMessage());
+
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+
+                String jsonResponse = "{\"error\": \"Access Denied\", \"message\": \""
+                        + accessDeniedException.getMessage() + "\"}";
+
+                response.getWriter().write(jsonResponse);
+                response.getWriter().flush();
+            } else {
+                log.warn("Access denied: response already committed");
+            }
         };
     }
 
