@@ -6,7 +6,6 @@ import com.valentin.file_manager_server.model.UploadStatusResponse;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -25,20 +23,17 @@ public class FileController {
     private final FileService fileService;
 
     @GetMapping
-    public ResponseEntity<?> listFiles() {
-
+    public ResponseEntity<List<FileMetadata>> listFiles() {
         try {
             List<FileMetadata> files = fileService.listFiles();
             return ResponseEntity.ok(files);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("File metadata fetch failed: " + e.getMessage());
+            throw new RuntimeException("Cannot fetch file metadata: " + e.getMessage());
         }
     }
 
     @GetMapping("/download")
-    public ResponseEntity<?> downloadFile(@RequestParam String s3Key) {
-
+    public ResponseEntity<StreamingResponseBody> downloadFile(@RequestParam String s3Key) {
         try {
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
             StreamingResponseBody body = fileService.downloadFile(s3Key, currentUser);
@@ -49,20 +44,19 @@ public class FileController {
                             "attachment; filename=\"" + originalFilename + "\"")
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(body);
-        } catch (FileNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("File not found");
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("File download failed: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("File download failed: " + e.getMessage());
         }
     }
 
     @GetMapping("/upload/status")
     public ResponseEntity<UploadStatusResponse> getUploadStatus(@RequestParam String uploadId) {
-        UploadStatus status = fileService.getUploadStatus(uploadId);
-        return ResponseEntity.ok(new UploadStatusResponse(status));
+        try {
+            UploadStatus status = fileService.getUploadStatus(uploadId);
+            return ResponseEntity.ok(new UploadStatusResponse(status));
+        } catch (Exception e) {
+            throw new RuntimeException("Cannot fetch file upload status: " + e.getMessage());
+        }
     }
 
     @PostMapping("/upload")
@@ -76,26 +70,19 @@ public class FileController {
 
             return ResponseEntity.accepted().body(uploadId);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("File upload failed: " + e.getMessage());
+            throw new RuntimeException("File upload failed: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteFile(@RequestParam String s3Key) {
-
         try {
             String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
             fileService.deleteFile(s3Key, currentUser);
 
             return ResponseEntity.ok("File deleted successfully");
-        } catch (FileNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("File not found");
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("File deletion failed: " + e.getMessage());
         }
     }
 }

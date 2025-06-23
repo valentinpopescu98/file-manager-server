@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.FileNotFoundException;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -15,5 +17,11 @@ public class GlobalExceptionHandler {
         log.error("Error", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Internal error: " + e.getMessage());
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<String> handleFileNotFound(FileNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body("File not found: " + e.getMessage());
     }
 }

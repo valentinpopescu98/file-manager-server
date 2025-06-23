@@ -5,7 +5,6 @@ import com.valentin.file_manager_server.model.AuthResponse;
 import com.valentin.file_manager_server.security.JwtUtil;
 import com.valentin.file_manager_server.service.AppUserDetailsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.nio.file.AccessDeniedException;
 
 @RequiredArgsConstructor
 @RestController
@@ -23,8 +24,7 @@ public class AuthController {
     private final AppUserDetailsService userDetailsService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> regularLogin(@RequestBody AuthRequest request) {
-
+    public ResponseEntity<AuthResponse> regularLogin(@RequestBody AuthRequest request) throws AccessDeniedException {
         try {
             UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
 
@@ -35,14 +35,12 @@ public class AuthController {
             String token = jwtUtil.generateToken(user);
             return ResponseEntity.ok(new AuthResponse(token));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid credentials: " + e.getMessage());
+            throw new AccessDeniedException("Invalid credentials");
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> regularRegister(@RequestBody AuthRequest req) {
-
+    public ResponseEntity<String> regularRegister(@RequestBody AuthRequest req) {
         try {
             if (userDetailsService.existsByEmail(req.getEmail())) {
                 return ResponseEntity.badRequest().body("Email already registered.");
@@ -52,8 +50,7 @@ public class AuthController {
 
             return ResponseEntity.ok("User registered.");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Register failed: " + e.getMessage());
+            throw new RuntimeException("Register failed: " + e.getMessage());
         }
     }
 }
