@@ -2,7 +2,7 @@ package com.valentin.file_manager_server.controller;
 
 import com.valentin.file_manager_server.model.AuthRequest;
 import com.valentin.file_manager_server.model.AuthResponse;
-import com.valentin.file_manager_server.security.JwtUtil;
+import com.valentin.file_manager_server.security.jwt.JwtUtil;
 import com.valentin.file_manager_server.service.AppUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

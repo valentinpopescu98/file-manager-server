@@ -1,4 +1,4 @@
-package com.valentin.file_manager_server.security;
+package com.valentin.file_manager_server.security.jwt;
 
 import com.valentin.file_manager_server.model.AppUser;
 import io.jsonwebtoken.Jwts;

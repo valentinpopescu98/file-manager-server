@@ -1,4 +1,4 @@
-package com.valentin.file_manager_server.security;
+package com.valentin.file_manager_server.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,7 +33,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-
         String username = null;
         String jwt = null;
 
@@ -42,7 +41,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
-                log.error("Invalid token: {}", jwt);
+                log.error("Invalid token format: {}", jwt);
+                throw new JwtAuthenticationException("Invalid JWT token");
             }
         }
 
@@ -56,12 +56,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .toList();
 
                 UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails, null, authorities);
+                        new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
+                log.info("User '{}' authenticated with JWT", username);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }

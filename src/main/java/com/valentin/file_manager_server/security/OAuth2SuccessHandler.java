@@ -1,6 +1,7 @@
 package com.valentin.file_manager_server.security;
 
 import com.valentin.file_manager_server.model.AppUser;
+import com.valentin.file_manager_server.security.jwt.JwtUtil;
 import com.valentin.file_manager_server.service.AppUserDetailsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
