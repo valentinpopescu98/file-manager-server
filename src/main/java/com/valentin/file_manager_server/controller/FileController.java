@@ -5,6 +5,7 @@ import com.valentin.file_manager_server.model.UploadStatus;
 import com.valentin.file_manager_server.model.UploadStatusResponse;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api")
@@ -24,6 +26,9 @@ public class FileController {
 
     @GetMapping
     public ResponseEntity<List<FileMetadata>> listFiles() {
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("List files requested by user '{}'", currentUser);
+
         try {
             List<FileMetadata> files = fileService.listFiles();
             return ResponseEntity.ok(files);
@@ -34,10 +39,11 @@ public class FileController {
 
     @GetMapping("/download")
     public ResponseEntity<StreamingResponseBody> downloadFile(@RequestParam String s3Key) {
-        try {
-            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            StreamingResponseBody body = fileService.downloadFile(s3Key, currentUser);
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Download requested by user '{}' for file '{}'", currentUser, s3Key);
 
+        try {
+            StreamingResponseBody body = fileService.downloadFile(s3Key, currentUser);
             String originalFilename = fileService.getOriginalFilename(s3Key);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -49,37 +55,37 @@ public class FileController {
         }
     }
 
-    @GetMapping("/upload/status")
-    public ResponseEntity<UploadStatusResponse> getUploadStatus(@RequestParam String uploadId) {
-        try {
-            UploadStatus status = fileService.getUploadStatus(uploadId);
-            return ResponseEntity.ok(new UploadStatusResponse(status));
-        } catch (Exception e) {
-            throw new RuntimeException("Cannot fetch file upload status: " + e.getMessage());
-        }
-    }
-
     @PostMapping("/upload")
     public ResponseEntity<String> startUploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("description") String description) {
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Upload requested by user '{}' for file '{}'", currentUser, file.getOriginalFilename());
 
         try {
-            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
             String uploadId = fileService.startUploadFile(file, file.getOriginalFilename(), description, currentUser);
-
             return ResponseEntity.accepted().body(uploadId);
         } catch (Exception e) {
             throw new RuntimeException("File upload failed: " + e.getMessage());
         }
     }
 
+    @GetMapping("/upload/status")
+    public ResponseEntity<UploadStatusResponse> getUploadStatus(@RequestParam String uploadId) {
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        UploadStatus status = fileService.getUploadStatus(uploadId);
+        log.info("Upload status requested by user '{}' for upload id '{}'", currentUser, uploadId);
+
+        return ResponseEntity.ok(new UploadStatusResponse(status));
+    }
+
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteFile(@RequestParam String s3Key) {
-        try {
-            String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-            fileService.deleteFile(s3Key, currentUser);
+        String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Upload requested by user '{}' for file '{}'", currentUser, s3Key);
 
+        try {
+            fileService.deleteFile(s3Key, currentUser);
             return ResponseEntity.ok("File deleted successfully");
         } catch (Exception e) {
             throw new RuntimeException("File deletion failed: " + e.getMessage());

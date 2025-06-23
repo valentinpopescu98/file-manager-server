@@ -20,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -53,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/download").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/upload").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/upload/status").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/delete").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/verify-email").hasRole("ADMIN")
                         .requestMatchers("/api/login", "/api/register",
@@ -133,5 +135,10 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RequestAttributeSecurityContextRepository getRequestAttributeSecurityContextRepository() {
+        return new RequestAttributeSecurityContextRepository();
     }
 }

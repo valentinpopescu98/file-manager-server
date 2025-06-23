@@ -8,10 +8,12 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,6 +27,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private JwtUtil jwtUtil;
     private UserDetailsService userDetailsService;
+    private RequestAttributeSecurityContextRepository securityContextRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -64,6 +67,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
+        SecurityContext context = SecurityContextHolder.getContext();
+        securityContextRepository.saveContext(context, request, response);
 
         filterChain.doFilter(request, response);
     }

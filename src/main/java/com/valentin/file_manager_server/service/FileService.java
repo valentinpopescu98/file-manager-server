@@ -55,29 +55,37 @@ public class FileService {
         if (fileOpt.isEmpty()) {
             throw new FileNotFoundException();
         }
+        FileMetadata fileMetadata = fileOpt.get();
 
-        try {
-            ResponseInputStream<GetObjectResponse> fileStream = s3Service.downloadFile(s3Key);
+        ResponseInputStream<GetObjectResponse> fileStream = s3Service.downloadFile(s3Key);
 
-            FileMetadata fileMetadata = fileOpt.get();
-            emailService.sendDownloadNotification(fileMetadata, email);
-
-            return output -> {
-                try (fileStream) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = fileStream.read(buffer)) != -1) {
-                        output.write(buffer, 0, bytesRead);
-                    }
+        return output -> {
+            boolean success = false;
+            try (fileStream) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = fileStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
                 }
-            };
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to download file: " + e.getMessage(), e);
-        }
+
+                success = true;
+                emailService.sendDownloadNotification(fileMetadata, email);
+            } catch (Exception e) {
+                log.error("Error during download streaming: {}", e.getMessage());
+            } finally {
+                if (!success) {
+                    log.warn("Download failed or was interrupted for file: {}", s3Key);
+                }
+            }
+        };
     }
 
-    public UploadStatus getUploadStatus(String uploadId) {
-        return uploadStatusMap.getOrDefault(uploadId, UploadStatus.ERROR);
+    private String generateUniqueUploadId() {
+        String uploadId;
+        do {
+            uploadId = UUID.randomUUID().toString();
+        } while (uploadStatusMap.containsKey(uploadId));
+        return uploadId;
     }
 
     public String startUploadFile(MultipartFile file, String name, String description, String uploaderEmail) {
@@ -102,14 +110,6 @@ public class FileService {
         return uploadId;
     }
 
-    private String generateUniqueUploadId() {
-        String uploadId;
-        do {
-            uploadId = UUID.randomUUID().toString();
-        } while (uploadStatusMap.containsKey(uploadId));
-        return uploadId;
-    }
-
     private void asyncUploadTask(
             String uploadId, File tempFile, String name, String description, String uploaderEmail) {
         try {
@@ -125,7 +125,6 @@ public class FileService {
     }
 
     private FileMetadata uploadFile(File file, String name, String description, String uploaderEmail) {
-
         try {
             String s3Key = s3Service.uploadFile(file);
             String url = s3Service.generateFileUrl(s3Key);
@@ -138,17 +137,21 @@ public class FileService {
         }
     }
 
+    public UploadStatus getUploadStatus(String uploadId) {
+        return uploadStatusMap.getOrDefault(uploadId, UploadStatus.ERROR);
+    }
+
     public void deleteFile(String s3Key, String email) throws FileNotFoundException {
         Optional<FileMetadata> fileOpt = findFileByKey(s3Key);
         if (fileOpt.isEmpty()) {
             throw new FileNotFoundException();
         }
+        FileMetadata fileMetadata = fileOpt.get();
 
         try {
             s3Service.deleteFile(s3Key);
             fileMetadataRepository.deleteByS3Key(s3Key);
 
-            FileMetadata fileMetadata = fileOpt.get();
             emailService.sendDeleteNotification(fileMetadata, email);
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete file: " + e.getMessage(), e);
