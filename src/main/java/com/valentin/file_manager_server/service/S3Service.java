@@ -79,7 +79,15 @@ public class S3Service {
     }
 
     public String extractOriginalFilename(String s3Key) {
-        String[] parts = s3Key.split("_", 2);
-        return parts.length > 1 ? parts[1] : s3Key;
+        // Remove first 3 prefixes
+        int temp = s3Key.indexOf("_");
+        int tempUUID = s3Key.indexOf("_", temp + 1);
+        int s3UUID = s3Key.indexOf("_", tempUUID + 1);
+
+        if (temp == -1 || tempUUID == -1 || s3UUID == -1 || s3UUID + 1 >= s3Key.length()) {
+            return s3Key; // fallback if it doesn't follow structure
+        }
+
+        return s3Key.substring(s3UUID + 1);
     }
 }

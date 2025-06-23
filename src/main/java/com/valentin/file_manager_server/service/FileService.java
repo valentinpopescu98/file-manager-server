@@ -97,7 +97,7 @@ public class FileService {
         // Save the file temporary
         File tempFile;
         try {
-            tempFile = File.createTempFile("upload_", "_" + file.getOriginalFilename());
+            tempFile = File.createTempFile("temp_", "_" + file.getOriginalFilename());
             file.transferTo(tempFile);
         } catch (IOException e) {
             uploadStatusMap.put(uploadId, UploadStatus.ERROR);
@@ -105,7 +105,8 @@ public class FileService {
         }
 
         // Delegate new thread for upload
-        CompletableFuture.runAsync(() -> asyncUploadTask(uploadId, tempFile, name, description, uploaderEmail), executor);
+        CompletableFuture.runAsync(() ->
+                asyncUploadTask(uploadId, tempFile, name, description, uploaderEmail), executor);
 
         return uploadId;
     }
@@ -121,6 +122,11 @@ public class FileService {
             uploadStatusMap.put(uploadId, UploadStatus.ERROR);
             log.error("File {} with upload ID {} failed uploaded with error",
                     tempFile.getName(), uploadId, e);
+        } finally {
+            boolean deleted = tempFile.delete();
+            if (!deleted) {
+                log.warn("Temp file {} could not be deleted", tempFile.getAbsolutePath());
+            }
         }
     }
 
