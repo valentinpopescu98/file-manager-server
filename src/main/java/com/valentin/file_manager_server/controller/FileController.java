@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -40,7 +44,8 @@ public class FileController {
             @RequestParam(required = false) String filterName,
             @RequestParam(required = false) String filterDescription,
             @RequestParam(required = false) String filterUploaderEmail,
-            @RequestParam(required = false) String filterUploadedAt) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate filterUploadedAtBefore,
+            @RequestParam(required = false) @DateTimeFormat(iso = DATE) LocalDate filterUploadedAtAfter) {
 
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("List files requested by user '{}'", currentUser);
@@ -48,15 +53,15 @@ public class FileController {
         try {
             // Filter files
             Specification<FileMetadata> spec = Specification.where(null);
-            Specification<FileMetadata> nameSpec = FileMetadataSpecification.filterByName(filterName);
-            Specification<FileMetadata> descSpec = FileMetadataSpecification.filterByDescription(filterDescription);
-            Specification<FileMetadata> emailSpec = FileMetadataSpecification.filterByUploaderEmail(filterUploaderEmail);
-            Specification<FileMetadata> dateSpec = FileMetadataSpecification.filterByUploadedAt(filterUploadedAt);
+            Specification<FileMetadata> nameSpec = FileMetadataSpecification.nameContains(filterName);
+            Specification<FileMetadata> descSpec = FileMetadataSpecification.descriptionContains(filterDescription);
+            Specification<FileMetadata> emailSpec = FileMetadataSpecification.uploaderEmailContains(filterUploaderEmail);
+            Specification<FileMetadata> dateSpec = FileMetadataSpecification.uploadedAtBetween(filterUploadedAtBefore, filterUploadedAtAfter);
 
             if (nameSpec != null) spec = spec.and(nameSpec);
             if (descSpec != null) spec = spec.and(descSpec);
             if (emailSpec != null) spec = spec.and(emailSpec);
-            if (dateSpec != null) spec = spec.and(dateSpec);
+            spec = spec.and(dateSpec);
 
             // Sort files
             Sort.Direction order = sortOrder.equalsIgnoreCase("asc") ?
