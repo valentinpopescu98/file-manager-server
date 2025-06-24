@@ -3,12 +3,14 @@ package com.valentin.file_manager_server.controller;
 import com.valentin.file_manager_server.model.FileMetadata;
 import com.valentin.file_manager_server.model.UploadStatus;
 import com.valentin.file_manager_server.model.UploadStatusResponse;
+import com.valentin.file_manager_server.repository.FileMetadataSpecification;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,12 +36,28 @@ public class FileController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortOrder) {
+            @RequestParam(defaultValue = "asc") String sortOrder,
+            @RequestParam(required = false) String filterName,
+            @RequestParam(required = false) String filterDescription,
+            @RequestParam(required = false) String filterUploaderEmail,
+            @RequestParam(required = false) String filterUploadedAt) {
 
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("List files requested by user '{}'", currentUser);
 
         try {
+            // Filter files
+            Specification<FileMetadata> spec = Specification.where(null);
+            Specification<FileMetadata> nameSpec = FileMetadataSpecification.filterByName(filterName);
+            Specification<FileMetadata> descSpec = FileMetadataSpecification.filterByDescription(filterDescription);
+            Specification<FileMetadata> emailSpec = FileMetadataSpecification.filterByUploaderEmail(filterUploaderEmail);
+            Specification<FileMetadata> dateSpec = FileMetadataSpecification.filterByUploadedAt(filterUploadedAt);
+
+            if (nameSpec != null) spec = spec.and(nameSpec);
+            if (descSpec != null) spec = spec.and(descSpec);
+            if (emailSpec != null) spec = spec.and(emailSpec);
+            if (dateSpec != null) spec = spec.and(dateSpec);
+
             // Sort files
             Sort.Direction order = sortOrder.equalsIgnoreCase("asc") ?
                     Sort.Direction.ASC : Sort.Direction.DESC;
@@ -47,7 +65,7 @@ public class FileController {
 
             // Request 1 more to check if there is a next page
             Pageable pageable = PageRequest.of(page - 1, limit + 1, sort);
-            List<FileMetadata> filesPlusOne = fileService.listFiles(pageable);
+            List<FileMetadata> filesPlusOne = fileService.listFiles(pageable, spec);
 
             boolean hasNextPage = filesPlusOne.size() > limit;
             List<FileMetadata> files = filesPlusOne.stream().limit(limit).toList();

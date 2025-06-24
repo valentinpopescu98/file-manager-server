@@ -6,6 +6,7 @@ import com.valentin.file_manager_server.repository.FileMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -35,9 +36,9 @@ public class FileService {
     private final Executor executor;
     private final Map<String, UploadStatus> uploadStatusMap = new ConcurrentHashMap<>();
 
-    public List<FileMetadata> listFiles(Pageable pageable) {
+    public List<FileMetadata> listFiles(Pageable pageable, Specification<FileMetadata> spec) {
         try {
-            return fileMetadataRepository.findAll(pageable).getContent();
+            return fileMetadataRepository.findAll(spec, pageable).getContent();
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch files: " + e.getMessage(), e);
         }
