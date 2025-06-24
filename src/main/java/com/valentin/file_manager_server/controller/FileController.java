@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,14 +32,21 @@ public class FileController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> listFiles(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortOrder) {
 
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("List files requested by user '{}'", currentUser);
 
         try {
+            // Sort files
+            Sort.Direction order = sortOrder.equalsIgnoreCase("asc") ?
+                    Sort.Direction.ASC : Sort.Direction.DESC;
+            Sort sort = Sort.by(order, sortBy);
+
             // Request 1 more to check if there is a next page
-            Pageable pageable = PageRequest.of(page - 1, limit + 1);
+            Pageable pageable = PageRequest.of(page - 1, limit + 1, sort);
             List<FileMetadata> filesPlusOne = fileService.listFiles(pageable);
 
             boolean hasNextPage = filesPlusOne.size() > limit;
