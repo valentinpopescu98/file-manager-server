@@ -5,6 +5,8 @@ import com.valentin.file_manager_server.model.UploadStatus;
 import com.valentin.file_manager_server.repository.FileMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -15,7 +17,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,9 +35,9 @@ public class FileService {
     private final Executor executor;
     private final Map<String, UploadStatus> uploadStatusMap = new ConcurrentHashMap<>();
 
-    public List<FileMetadata> listFiles() {
+    public Page<FileMetadata> listFiles(Pageable pageable) {
         try {
-            return fileMetadataRepository.findAll();
+            return fileMetadataRepository.findAll(pageable);
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch files: " + e.getMessage(), e);
         }

@@ -6,6 +6,8 @@ import com.valentin.file_manager_server.model.UploadStatusResponse;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,13 +28,19 @@ public class FileController {
     private final FileService fileService;
 
     @GetMapping
-    public ResponseEntity<List<FileMetadata>> listFiles() {
+    public ResponseEntity<Map<String, Object>> listFiles(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("List files requested by user '{}'", currentUser);
 
         try {
-            List<FileMetadata> files = fileService.listFiles();
-            return ResponseEntity.ok(files);
+            Page<FileMetadata> filePage = fileService.listFiles(PageRequest.of(page - 1, limit));
+            Map<String, Object> response = new HashMap<>();
+            response.put("files", filePage.getContent());
+            response.put("total", filePage.getTotalElements());
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             throw new RuntimeException("Cannot fetch file metadata: " + e.getMessage());
         }
@@ -59,6 +68,7 @@ public class FileController {
     public ResponseEntity<String> startUploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("description") String description) {
+
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Upload requested by user '{}' for file '{}'", currentUser, file.getOriginalFilename());
 
