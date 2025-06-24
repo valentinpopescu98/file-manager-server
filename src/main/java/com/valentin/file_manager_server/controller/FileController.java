@@ -6,8 +6,8 @@ import com.valentin.file_manager_server.model.UploadStatusResponse;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -36,10 +37,16 @@ public class FileController {
         log.info("List files requested by user '{}'", currentUser);
 
         try {
-            Page<FileMetadata> filePage = fileService.listFiles(PageRequest.of(page - 1, limit));
+            // Request 1 more to check if there is a next page
+            Pageable pageable = PageRequest.of(page - 1, limit + 1);
+            List<FileMetadata> filesPlusOne = fileService.listFiles(pageable);
+
+            boolean hasNextPage = filesPlusOne.size() > limit;
+            List<FileMetadata> files = filesPlusOne.stream().limit(limit).toList();
+
             Map<String, Object> response = new HashMap<>();
-            response.put("files", filePage.getContent());
-            response.put("total", filePage.getTotalElements());
+            response.put("files", files);
+            response.put("hasNextPage", hasNextPage);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             throw new RuntimeException("Cannot fetch file metadata: " + e.getMessage());
