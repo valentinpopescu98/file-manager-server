@@ -7,6 +7,7 @@ import com.valentin.file_manager_server.repository.FileMetadataSpecification;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,7 +23,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
@@ -68,16 +68,12 @@ public class FileController {
                     Sort.Direction.ASC : Sort.Direction.DESC;
             Sort sort = Sort.by(order, sortBy);
 
-            // Request 1 more to check if there is a next page
-            Pageable pageable = PageRequest.of(page - 1, limit + 1, sort);
-            List<FileMetadata> filesPlusOne = fileService.listFiles(pageable, spec);
-
-            boolean hasNextPage = filesPlusOne.size() > limit;
-            List<FileMetadata> files = filesPlusOne.stream().limit(limit).toList();
+            Pageable pageable = PageRequest.of(page - 1, limit, sort);
+            Page<FileMetadata> pageResult = fileService.listFiles(pageable, spec);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("files", files);
-            response.put("hasNextPage", hasNextPage);
+            response.put("files", pageResult.getContent());
+            response.put("filesCount", pageResult.getTotalElements());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             throw new RuntimeException("Cannot fetch file metadata: " + e.getMessage());
