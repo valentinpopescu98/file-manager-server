@@ -1,7 +1,8 @@
 package com.valentin.file_manager_server.service;
 
 import com.valentin.file_manager_server.model.FileMetadata;
-import com.valentin.file_manager_server.model.UploadStatus;
+import com.valentin.file_manager_server.model.enums.FileAction;
+import com.valentin.file_manager_server.model.enums.UploadStatus;
 import com.valentin.file_manager_server.repository.FileMetadataRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

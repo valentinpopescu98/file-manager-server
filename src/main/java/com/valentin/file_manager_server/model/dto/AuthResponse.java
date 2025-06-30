@@ -1,4 +1,4 @@
-package com.valentin.file_manager_server.model;
+package com.valentin.file_manager_server.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
