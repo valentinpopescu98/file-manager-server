@@ -33,6 +33,7 @@ public class FileService {
 
     private final S3Service s3Service;
     private final EmailService emailService;
+    private final FilesActionLogService filesActionLogService;
     private final FileMetadataRepository fileMetadataRepository;
     private final Executor executor;
     private final Map<String, UploadStatus> uploadStatusMap = new ConcurrentHashMap<>();
@@ -72,6 +73,7 @@ public class FileService {
                 }
 
                 success = true;
+                filesActionLogService.logAction(FileAction.DOWNLOAD, email, fileMetadata.getId());
                 emailService.sendDownloadNotification(fileMetadata, email);
             } catch (Exception e) {
                 log.error("Error during download streaming: {}", e.getMessage());
@@ -118,6 +120,7 @@ public class FileService {
             String uploadId, File tempFile, String name, String description, String uploaderEmail) {
         try {
             FileMetadata fileMetadata = uploadFile(tempFile, name, description, uploaderEmail);
+            filesActionLogService.logAction(FileAction.UPLOAD, uploaderEmail, fileMetadata.getId());
             emailService.sendUploadConfirmationEmail(fileMetadata, uploaderEmail);
             uploadStatusMap.put(uploadId, UploadStatus.DONE);
             log.info("File {} with upload ID {} has been uploaded", tempFile.getName(), uploadId);
@@ -161,6 +164,7 @@ public class FileService {
             s3Service.deleteFile(s3Key);
             fileMetadataRepository.deleteByS3Key(s3Key);
 
+            filesActionLogService.logAction(FileAction.DELETE, email, fileMetadata.getId());
             emailService.sendDeleteNotification(fileMetadata, email);
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete file: " + e.getMessage(), e);
