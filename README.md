@@ -11,7 +11,11 @@ How to run:
 3. ssh -i ~/.ssh/file-manager-key.pem user@host
 4. chmod 600 ~/.ssh/id_rsa
 5. git clone git@github.com:valentinpopescu98/file-manager-server.git ~/file-manager-server/
-6. ~/file-manager-server/build-and-run.sh
+6. Add file in src/main/resources named application-secret.properties with the following fields:
+   - spring.security.oauth2.client.registration.google.client-id={client ID from Google Cloud Console}
+   - spring.security.oauth2.client.registration.google.client-secret={client secret from Google Cloud Console}
+6. (Optional, for dev environment) Add flag for FileManagerServerApplication as '-Dspring.profiles.active=dev' at environment variables
+7. ~/file-manager-server/build-and-run.sh
 
 ---
 
