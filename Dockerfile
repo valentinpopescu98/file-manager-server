@@ -1,5 +1,5 @@
 # Stage 1: Build app
-FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
+FROM maven:3.9.11-eclipse-temurin-25-alpine AS build
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run app on a small image
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:25-jdk-alpine
 
 VOLUME /tmp
 WORKDIR /app
