@@ -58,7 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/delete").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/log/files/actions/last-mutation").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/verify-email").hasRole("ADMIN")
-                        .requestMatchers("/api/login", "/api/register",
+                        .requestMatchers("/api/auth/**",
                                 "/login/oauth2/code/**", "/oauth2/success",
                                 "/css/**", "/js/**").permitAll()
                         .anyRequest().authenticated()
