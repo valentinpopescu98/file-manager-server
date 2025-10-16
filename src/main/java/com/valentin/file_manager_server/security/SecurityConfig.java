@@ -27,6 +27,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static com.valentin.file_manager_server.model.enums.AuthorizationRole.ADMIN;
+
 @Slf4j
 @RequiredArgsConstructor
 @Configuration
@@ -57,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/upload/status").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/delete").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/log/files/actions/last-mutation").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/verify-email").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/verify-email").hasRole(ADMIN.toString())
                         .requestMatchers("/api/auth/**",
                                 "/login/oauth2/code/**", "/oauth2/success",
                                 "/css/**", "/js/**").permitAll()
