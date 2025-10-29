@@ -1,8 +1,9 @@
 package com.valentin.file_manager_server.controller;
 
 import com.valentin.file_manager_server.model.FileMetadata;
-import com.valentin.file_manager_server.model.enums.UploadStatus;
 import com.valentin.file_manager_server.model.dto.UploadStatusResponse;
+import com.valentin.file_manager_server.model.dto.UploadResponse;
+import com.valentin.file_manager_server.model.enums.UploadStatus;
 import com.valentin.file_manager_server.repository.FileMetadataSpecification;
 import com.valentin.file_manager_server.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -14,15 +15,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
@@ -76,7 +80,7 @@ public class FileController {
             response.put("filesCount", pageResult.getTotalElements());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            throw new RuntimeException("Cannot fetch file metadata: " + e.getMessage());
+            throw new RuntimeException("Cannot fetch file metadata: " + e.getMessage(), e);
         }
     }
 
@@ -94,23 +98,28 @@ public class FileController {
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(body);
         } catch (Exception e) {
-            throw new RuntimeException("File download failed: " + e.getMessage());
+            throw new RuntimeException("File download failed: " + e.getMessage(), e);
         }
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> startUploadFile(
-            @RequestParam("file") MultipartFile file,
+    public ResponseEntity<List<UploadResponse>> startUploadFile(
+            @RequestParam("files") List<MultipartFile> files,
             @RequestParam("description") String description) {
 
+        if (files == null || files.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No files provided");
+        }
+
         String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-        log.info("Upload requested by user '{}' for file '{}'", currentUser, file.getOriginalFilename());
+        log.info("Upload requested by user '{}' for files '{}'", currentUser,
+                files.stream().map(MultipartFile::getOriginalFilename).toList());
 
         try {
-            String uploadId = fileService.startUploadFile(file, file.getOriginalFilename(), description, currentUser);
-            return ResponseEntity.accepted().body(uploadId);
+            List<UploadResponse> tempFiles = fileService.startUploadFiles(files, description, currentUser);
+            return ResponseEntity.accepted().body(tempFiles);
         } catch (Exception e) {
-            throw new RuntimeException("File upload failed: " + e.getMessage());
+            throw new RuntimeException("File upload failed: " + e.getMessage(), e);
         }
     }
 
@@ -132,7 +141,7 @@ public class FileController {
             fileService.deleteFile(s3Key, currentUser);
             return ResponseEntity.ok("File deleted successfully");
         } catch (Exception e) {
-            throw new RuntimeException("File deletion failed: " + e.getMessage());
+            throw new RuntimeException("File deletion failed: " + e.getMessage(), e);
         }
     }
 }

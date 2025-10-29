@@ -1,13 +1,17 @@
 package com.valentin.file_manager_server.service;
 
 import com.valentin.file_manager_server.model.FileMetadata;
+import com.valentin.file_manager_server.model.dto.UploadResult;
+import com.valentin.file_manager_server.model.enums.UploadStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -29,7 +33,7 @@ public class EmailService {
             Description: %s
             Uploaded at: %s
             
-            Action was made by: %s
+            Action performed by: %s
             
             Best regards!
             """, metadata.getName(), metadata.getDescription(), metadata.getUploadedAt(), actionBy);
@@ -38,22 +42,21 @@ public class EmailService {
     }
 
     @Async
-    public void sendUploadConfirmationEmail(FileMetadata metadata, String actionBy) {
-        String subject = "File uploaded successfully";
+    public void sendUploadConfirmationEmail(List<UploadResult> metadata, String actionBy) {
+        String subject = "Files upload summary";
         String body = String.format("""
             Hello,
 
-            File "%s" was uploaded.
+            The following files were uploaded:
+            
+            %s
 
-            Description: %s
-            Uploaded at: %s
-
-            Action was made by: %s
+            Action performed by: %s
             
             Best regards!
-            """, metadata.getName(), metadata.getDescription(), metadata.getUploadedAt(), actionBy);
+            """, metadata.stream().map(this::uploadResToStr).collect(Collectors.joining("\n")), actionBy);
 
-        sendEmail(metadata.getUploaderEmail(), subject, body);
+        sendEmail(actionBy, subject, body);
     }
 
     @Async
@@ -67,12 +70,25 @@ public class EmailService {
             Description: %s
             Uploaded at: %s
             
-            Action was made by: %s
+            Action performed by: %s
             
             Best regards!
             """, metadata.getName(), metadata.getDescription(), metadata.getUploadedAt(), actionBy);
 
         sendEmail(metadata.getUploaderEmail(), subject, body);
+    }
+
+    private String uploadResToStr(UploadResult result) {
+        return String.format("""
+                Name: %s
+                Description: %s
+                Uploaded at: %s
+                Status: %s
+                """,
+                result.getName(),
+                result.getDescription(),
+                result.getUploadedAt() == null ? "--" : result.getUploadedAt(),
+                result.getStatus() == UploadStatus.DONE ? "SUCCESS" : "FAILED");
     }
 
     private void sendEmail(String to, String subject, String body) {
